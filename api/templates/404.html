@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Event Table</title>
+    <link
+      rel="icon"
+      type="image/x-icon"
+      href="{{ url_for('static',filename='favicon.ico') }}"
+    />
+    <link
+      rel="stylesheet"
+      type="text/css"
+      href="{{ url_for('static',filename='styles/style.css') }}"
+    />
+  </head>
+  <body class="min-h-screen">
+    <div id="loadingOverlay" class="min-h-screen">
+      <div class="loading-content">
+        <img
+          src="{{ url_for('static',filename='loading.gif') }}"
+          alt="Loading gif"
+        />
+        <span class="grey-text">Getting your data<br />Please wait</span>
+      </div>
+    </div>
+    <nav class="navbar">
+      <a href="/">
+        <img class="logo" src="{{ url_for('static',filename='logo.png') }}" />
+      </a>
+      <span style="color: white; align-self: center"> Event Table </span>
+    </nav>
+    <main class="container" style="justify-content: center">
+      <div
+        style="
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          width: 100%;
+        "
+      >
+        <div class="form" style="text-align: center">
+          <h1 style="font-size: 6rem; margin: 0">404</h1>
+          <p style="font-size: 2rem; color: gray; margin: 0">Page not found</p>
+          <br />
+          <button
+            style="
+              border: 0;
+              padding: 5px 20px;
+              background-color: rgb(233, 75, 75);
+              border-radius: 5px;
+              font-weight: 700;
+              font-size: 1.3rem;
+              color: #ffffff;
+            "
+            onclick="window.close()"
+            type="button"
+          >
+            Go back
+          </button>
+        </div>
+      </div>
+    </main>
+    <footer>
+      <span>GapMash&trade; 2023</span>
+    </footer>
+  </body>
+</html>

@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Event Table</title>
+    <link
+      rel="icon"
+      type="image/x-icon"
+      href="{{ url_for('static',filename='favicon.ico') }}"
+    />
+    <link
+      rel="stylesheet"
+      type="text/css"
+      href="{{ url_for('static',filename='styles/style.css') }}"
+    />
+  </head>
+  <body class="min-h-screen" style="min-height: calc(100vh - 182px)">
+    <div id="loadingOverlay" class="min-h-screen">
+      <div class="loading-content">
+        <img src="{{ url_for('static',filename='loading.gif') }}" alt="Loading gif"/>
+        <span class="grey-text">Getting your data<br />Please wait</span>
+      </div>
+    </div>
+    <nav class="navbar">
+      <a href="/">
+        <img class="logo" src="{{ url_for('static',filename='logo.png') }}"/>
+      </a>
+      <!-- <span style="color: white; align-self: center"> Event Table </span> -->
+    </nav>
+    <main class="container">
+      <h2 class="title">Event Table</h2>
+      <div class="form">
+        <form id="scrapeForm" name="scrapeForm">
+          <div class="dates-container">
+            <div class="input-container">
+              <label htmlFor="dateFrom">From:<span style="color: red">*</span></label>
+              <input
+                required
+                name="dateFrom"
+                id="dateFrom"
+                type="date"
+                placeholder="Date from"
+              />
+            </div>
+            <div class="input-container">
+              <label htmlFor="dateTo">To:<span style="color: red">*</span></label>
+              <input
+                required
+                name="dateTo"
+                id="dateTo"
+                type="date"
+                placeholder="Date to"
+                max="todayDate"
+              />
+            </div>
+          </div>
+          <div style="display: flex; flex-direction: column">
+            <label>Event Name</label>
+            <input
+              id="event-name"
+              name="event-name"
+              type="text"
+              onchange="searchEvent"
+            />
+          </div>
+          <fieldset class="input-sources">
+            <legend
+              style="
+                font-size: 14px;
+                color: rgb(55 65 81 / 1);
+                padding-bottom: 15px;
+              "
+            >
+              Source
+            </legend>
+            <div
+              class="source-container"
+              id="source-container-all"
+              onclick="addSourceOption('all')"
+            >
+              <input
+                type="checkbox"
+                name="sources"
+                value="all"
+                id="input-all"
+                onclick="addSourceOption('all')"
+                style="display: none"
+              />
+              <img src="{{ url_for('static',filename='web.png') }}" />
+              All
+            </div>
+            <div
+              class="source-container"
+              id="source-container-fb"
+              onclick="addSourceOption('fb')"
+            >
+              <input
+                type="checkbox"
+                name="sources"
+                value="fb"
+                id="input-fb"
+                onclick="addSourceOption('fb')"
+                style="display: none"
+              />
+              <img src="{{ url_for('static',filename='fb.png') }}" />
+              Facebook
+            </div>
+            <div
+              class="source-container"
+              id="source-container-unsw"
+              onclick="addSourceOption('unsw')"
+            >
+              <input
+                type="checkbox"
+                name="sources"
+                value="unsw"
+                id="input-unsw"
+                onclick="addSourceOption('unsw')"
+                style="display: none"
+              />
+              <img src="{{ url_for('static',filename='unsw.png') }}" />
+              UNSW
+            </div>
+            <div
+              class="source-container"
+              id="source-container-uts"
+              onclick="addSourceOption('uts')"
+            >
+              <input
+                type="checkbox"
+                name="sources"
+                value="uts"
+                id="input-uts"
+                onclick="addSourceOption('uts')"
+                style="display: none"
+              />
+              <img src="{{ url_for('static',filename='uts.png') }}" />
+              UTS
+            </div>
+            <div
+              class="source-container"
+              id="source-container-wsu"
+              onclick="addSourceOption('wsu')"
+            >
+              <input
+                type="checkbox"
+                name="sources"
+                value="wsu"
+                id="input-wsu"
+                style="display: none"
+                onclick="addUniOption('wsu')"
+              />
+              <img src="{{ url_for('static',filename='wsu.png') }}" />
+              WSU
+            </div>
+            <!-- <div
+              class="source-container"
+              id="source-container-usyd"
+              onclick="addSourceOption('usyd')"
+            >
+              <input
+                type="checkbox"
+                name="sources"
+                value="usyd"
+                id="input-usyd"
+                onclick="addSourceOption('usyd')"
+                style="display: none"
+              />
+              <img src="{{ url_for('static',filename='usyd.png') }}" />
+              USYD
+            </div> -->
+          </fieldset>
+          <button
+            id="btnReset"
+            class="btn-reset"
+            type="button"
+            onclick="onResetForm()"
+          >
+            Reset
+          </button>
+          <div style="height: 10px"></div>
+          <button id="btnSubmit" class="btn-search" type="submit">
+            Search
+          </button>
+        </form>
+        <section id="result-section">
+          <br />
+          <div
+            id="output"
+            style="
+              width: 100%;
+              display: flex;
+              justify-content: space-between;
+              flex-wrap: wrap;
+              gap: 10px;
+              overflow-x: scroll;
+            "
+          ></div>
+        </section>
+      </div>
+      <button onclick="goToTop()" id="btnToTop" title="Go to top">
+        <img src="{{ url_for('static',filename='arrow-up-line.png') }}" />
+      </button>
+    </main>
+    <footer>
+      <span>GapMash&trade; 2023</span>
+    </footer>
+    <script type="text/javascript">
+      const form = document.getElementById("scrapeForm");
+      const submitter = document.getElementById("btnSubmit");
+      const API_URL = "http://127.0.0.1";
+      const PORT_NUM = "5000";
+      const DEFAULT_IMG_LINK = "https://climate.onep.go.th/wp-content/uploads/2020/01/default-image.jpg";
+
+      let queryFrom = "";
+      let queryTo = "";
+      let sources = [];
+      // add value from checkbox id -> 'input-{value}' to array
+      const sourceList = ["fb", "unsw", "uts", "wsu", "usyd"];
+      const output = document.getElementById("output");
+      let loadingOverlay = document.getElementById("loadingOverlay");
+      let inputEventName = document.getElementById("event-name");
+      let dateFrom = document.getElementById("dateFrom");
+      let dateTo = document.getElementById("dateTo");
+      let resultSection = document.getElementById("result-section");
+      let btnToTop = document.getElementById("btnToTop");
+      window.onscroll = function () {
+        scrollFunction();
+      };
+      function scrollFunction() {
+        if (
+          document.body.scrollTop > 400 ||
+          document.documentElement.scrollTop > 20
+        ) {
+          btnToTop.style.display = "block";
+        } else {
+          btnToTop.style.display = "none";
+        }
+      }
+      // When the user clicks on the button, scroll to the top of the document
+      function goToTop() {
+        document.body.scrollTop = 0; // For Safari
+        document.documentElement.scrollTop = 0; // For Chrome, Firefox, IE and Opera
+      }
+
+      function setForm() {
+        resultSection.style.display = "none";
+        const urlParams = new URLSearchParams(window.location.search);
+        queryFrom = urlParams.get("from");
+        queryTo = urlParams.get("to");
+        querySources = urlParams.get("sources");
+        queryEventName = urlParams.get("eventName");
+
+        //console.log("hmmm", queryFrom, queryTo);
+
+        if (queryFrom) {
+          let dateFrom = document.getElementById("dateFrom");
+
+          dateFrom.setAttribute("value", queryFrom);
+        }
+        if (queryFrom) {
+          let dateTo = document.getElementById("dateTo");
+
+          dateTo.setAttribute("value", queryTo);
+        }
+        if (querySources) {
+          const arrSources = querySources.split(",");
+          sources = arrSources;
+          for (let i = 0; i < arrSources.length; i++) {
+            document.getElementById(`input-${arrSources[i]}`).checked = true;
+            document
+              .getElementById(`source-container-${arrSources[i]}`)
+              .classList.add("selected");
+          }
+        } else {
+          sources = ["all"];
+          document.getElementById(`input-all`).checked = true;
+          document
+            .getElementById(`source-container-all`)
+            .classList.add("selected");
+        }
+        if (queryEventName) {
+          inputEventName.setAttribute("value", queryEventName);
+        }
+        if (queryFrom && queryTo) {
+          getEvents();
+        }
+      }
+      setForm();
+      function addSourceOption(value) {
+        console.log("here? 0");
+        const x = document.getElementById("source-container-all");
+        if (value !== "all") {
+          console.log("here? 1");
+          document.getElementById(`input-all`).checked = false;
+          document
+            .getElementById(`source-container-all`)
+            .classList.remove("selected");
+          sources = sources.filter((val) => val !== "all");
+        }
+        if (value === "all") {
+          console.log("here? 2");
+          sourceList.forEach((source) => {
+            document.getElementById(`input-${source}`).checked = false;
+            document
+              .getElementById(`source-container-${source}`)
+              .classList.remove("selected");
+          });
+          x.classList.add("selected");
+        }
+        if (sources.find((val) => val === value)) {
+          console.log("here? 3");
+          sources = sources.filter((val) => val !== value);
+          document.getElementById(`input-${value}`).checked = false;
+          document
+            .getElementById(`source-container-${value}`)
+            .classList.remove("selected");
+        } else {
+          console.log("here? 4");
+          document.getElementById(`input-${value}`).checked = true;
+          document
+            .getElementById(`source-container-${value}`)
+            .classList.add("selected");
+          value === "all" ? (sources = ["all"]) : sources.push(value);
+        }
+      }
+      function onResetForm() {
+        window.location.href = `${API_URL}:${PORT_NUM}/event-table`;
+      }
+      function setupEventRow({
+        title,
+        location,
+        dateFrom,
+        dateTo,
+        time,
+        image,
+        description,
+        link,
+        fbInterest,
+        sourceCode,
+      }) {
+        const cleanedImage = image
+          ? `<a href="${image}" target="_blank" class="event-link">View</a>`
+          : "NA";
+        const cleanedUrl = link
+          ? `<a href="${link}" target="_blank" class="event-link"><img src="{{ url_for('static',filename='external-link-line.png') }}"/></a>`
+          : "NA";
+        const templateRow = `<tr>
+                    <td>
+                      ${title}
+                    </td>
+                    <td>${location}</td>
+                    <td align="${description ? "" : "center"}">
+                      ${description || "NA"}
+                    </td>
+                    <td>${dateFrom}, ${new Date().getFullYear().toString()}</td>
+                    <td>${dateTo}, ${new Date().getFullYear().toString()}</td>
+                    <td align="center">${time || "NA"}</td>
+                    <td align="center">
+                      ${cleanedImage}
+                    </td>
+                    <td align="${fbInterest ? "" : "center"}">${
+          fbInterest || "NA"
+        }</td>
+        <td align="center">${sourceCode.toUpperCase()}</td>
+                    <td align="center">
+                      ${cleanedUrl}
+                    </td>
+                  </tr>`;
+        return templateRow;
+      }
+      function setupEventTable(rows) {
+        const templateTable = `<table class="event-table">
+                <thead>
+                  <tr>
+                    <th>Title</th>
+                    <th>Location</th>
+                    <th>Description</th>
+                    <th>From</th>
+                    <th>To</th>
+                    <th>Time</th>
+                    <th>Image</th>
+                    <th>FB Interest</th>
+                    <th>Source</th>
+                    <th>Link</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${rows}
+                </tbody>
+              </table>`;
+        return templateTable;
+      }
+
+      async function getEvents() {
+        try {
+          loadingOverlay.classList.add("active");
+          let sourcesString = sources.length > 0 ? sources.join(",") : "";
+          const newURL = new URL(`${API_URL}:${PORT_NUM}/event-table`);
+          let queryParams = {};
+          dateFrom.value &&
+            Object.assign(queryParams, { from: dateFrom.value });
+          dateTo.value && Object.assign(queryParams, { to: dateTo.value });
+          sourcesString &&
+            Object.assign(queryParams, { sources: sourcesString });
+          inputEventName.value &&
+            Object.assign(queryParams, { eventName: inputEventName.value });
+          Object.keys(queryParams).forEach((key) => {
+            newURL.searchParams.append(key, queryParams[key]);
+          });
+
+            // update URL
+          window.history.replaceState(queryParams, "", newURL.toString());
+          const baseUrl = new URL(`${API_URL}:${PORT_NUM}/events`);
+          Object.keys(queryParams).forEach((key) => {
+            baseUrl.searchParams.append(key, queryParams[key]);
+          });
+          const res = await fetch(baseUrl.toString(), {
+            method: "GET",
+          });
+          const newRes = await res.json();
+          if (newRes?.data && newRes?.data.length > 0) {
+            const str = JSON.stringify(newRes.data, null, 2);
+            let rows = "";
+            for (let i = 0; i < newRes.data.length; i++) {
+              const row = setupEventRow(newRes.data[i]);
+              rows += row;
+            }
+            const newTable = setupEventTable(rows);
+            output.innerHTML = newTable;
+
+          } else {
+            output.innerHTML = `<pre>Oops, event not found. Try changing the search option.</pre>`;
+          }
+        } catch (err) {
+          console.log("err", err);
+          output.innerHTML = "Err: " + JSON.stringify(err);
+        } finally {
+          loadingOverlay.classList.remove("active");
+          resultSection.style.display = "block";
+        }
+      }
+
+      form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        getEvents();
+        return false;
+      });
+    </script>
+  </body>
+</html>
